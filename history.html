@@ -154,8 +154,16 @@
                     {% for tx in transactions %}
                     <tr>
                         <td>{{ tx.timeStamp | format_timestamp }}</td> 
-                        <td class="hash">{{ tx.from }}</td>
-                        <td class="hash">{{ tx.to }}</td>
+                        <td class="hash">
+                            <a href="https://eth.blockscout.com/address/{{ tx.from }}" target="_blank" title="Lihat Wallet di Blockscout">
+                                {{ tx.from[:6] }}...{{ tx.from[-4:] }} 
+                            </a>
+                        </td>
+                        <td class="hash">
+                            <a href="https://eth.blockscout.com/address/{{ tx.to }}" target="_blank" title="Lihat Wallet di Blockscout">
+                                {{ tx.to[:6] }}...{{ tx.to[-4:] }}
+                            </a>
+                        </td>
                         <td>{{ tx.value | wei_to_eth | round(6) }}</td> 
                         <td class="hash">
                             <a href="https://eth.blockscout.com/tx/{{ tx.hash }}" target="_blank" title="Lihat di Blockscout">
