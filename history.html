@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Riwayat Transaksi Wallet Ethereum</title>
+    <style>
+        /* TEMA GELAP UTAMA */
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            padding: 20px;
+            background-color: #0d1117; /* Latar Belakang Sangat Gelap */
+            color: #c9d1d9; /* Teks Utama Putih Keabu-abuan */
+        }
+        
+        .container { 
+            max-width: 1300px; 
+            margin: 20px auto; 
+            background: #161b22; /* Latar Belakang Kontainer */
+            padding: 30px; 
+            border-radius: 12px; 
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5); /* Bayangan Lebih Dalam */
+        }
+        
+        /* JUDUL */
+        .title-box {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #30363d;
+        }
+
+        h1 { 
+            color: #00ff73; /* Hijau Neon untuk Judul */
+            font-size: 2.2em;
+            text-shadow: 0 0 8px #00ff73; /* Efek Neon */
+            margin: 0;
+        }
+        
+        /* BOX ALAMAT */
+        .address-box { 
+            margin-bottom: 25px; 
+            padding: 15px; 
+            background-color: #21262d; 
+            border: 1px solid #30363d;
+            border-left: 5px solid #007bff; /* Garis Biru Khas */
+            border-radius: 6px; 
+        }
+
+        h2 { 
+            color: #58a6ff; /* Biru Neon */
+            font-size: 1.2em; 
+            word-wrap: break-word; 
+            font-weight: normal;
+        }
+        
+        .address-box p {
+            font-size: 0.9em;
+            color: #8b949e;
+        }
+
+        .error { 
+            color: #ff5858; /* Merah neon untuk error */
+            font-weight: bold; 
+            background: #361717;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        
+        /* TABEL */
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 25px; 
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            overflow: hidden; /* Penting untuk border-radius tabel */
+        }
+        
+        th, td { 
+            padding: 14px 15px; 
+            text-align: left; 
+            border-bottom: 1px solid #30363d; 
+            word-wrap: break-word; 
+            font-size: 0.95em;
+        }
+        
+        th { 
+            background-color: #1f2733; /* Header Gelap */
+            color: #58a6ff; /* Teks Header Biru */
+            font-weight: bold;
+            border-bottom: 2px solid #007bff;
+        }
+        
+        tr:hover { 
+            background-color: #2b323c; /* Hover lebih gelap */
+        }
+
+        /* DETAIL KHUSUS */
+        .hash { 
+            font-size: 0.8em; 
+            color: #8b949e;
+        }
+
+        td a {
+            color: #58a6ff; /* Link biru neon */
+            text-decoration: none;
+        }
+
+        td a:hover {
+            text-decoration: underline;
+        }
+        
+        .success { 
+            color: #38b432; /* Hijau Sukses */
+            font-weight: bold;
+        }
+        
+        .failure { 
+            color: #ff5858; /* Merah Gagal */
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title-box">
+            <h1>Riwayat Transaksi Ethereum</h1>
+        </div>
+        
+        <div class="address-box">
+            Alamat Wallet: 
+            <h2>{{ address }}</h2>
+            <p>Data diambil dari Blockscout API. Urutan: Terbaru ke Terlama.</p> 
+        </div>
+
+        {% if error %}
+            <p class="error">
+                Kesalahan: {{ error }}. Harap periksa jaringan Termux Anda.
+            </p>
+        {% elif transactions %}
+<table>
+                <thead>
+                    <tr>
+                        <th>Waktu (WIB)</th> 
+                        <th>Dari</th>
+                        <th>Ke</th>
+                        <th>Jumlah (ETH)</th>
+                        <th>Hash Transaksi</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tx in transactions %}
+                    <tr>
+                        <td>{{ tx.timeStamp | format_timestamp }}</td> 
+                        <td class="hash">{{ tx.from }}</td>
+                        <td class="hash">{{ tx.to }}</td>
+                        <td>{{ tx.value | wei_to_eth | round(6) }}</td> 
+                        <td class="hash">
+                            <a href="https://eth.blockscout.com/tx/{{ tx.hash }}" target="_blank" title="Lihat di Blockscout">
+                                {{ tx.hash[:10] }}...
+                            </a>
+                        </td>
+                        <td>
+                            {% if tx.isError == '0' %}
+                                <span class="success">Sukses</span>
+                            {% else %}
+                                <span class="failure">Gagal</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+        {% else %}
+            <p>Tidak ada transaksi normal yang ditemukan untuk alamat ini, atau ada masalah dengan respons API.</p>
+        {% endif %}
+    </div>
+</body>
+</html>
