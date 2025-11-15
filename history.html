@@ -58,6 +58,18 @@
             color: #8b949e;
             font-size:l 15 px;
         }
+        
+        /* Tambahan style untuk penekanan pada jumlah nominal */
+        .amount-display {
+            color: #00ff73; /* Hijau Neon */
+            font-weight: bold;
+            display: block; /* Memastikan setiap p baru */
+        }
+        .time-label {
+            color: #8b949e;
+            font-weight: normal;
+        }
+        /* Akhir tambahan style */
 
         .error { 
             color: #ff5858; /* Merah neon untuk error */
@@ -200,6 +212,20 @@
             {% if eth_price_usd %}
                 <p id="eth-price-display">Harga ETH Saat Ini: **${{ eth_price_usd | format_currency(2) }}**</p>
             {% endif %}
+            
+            {# --- TAMBAHAN KODE MODIFIKASI DIMULAI DI SINI --- #}
+            <p class="amount-display">
+                <span class="time-label">1 Menit Terbaru:</span> 
+                <span id="current-minute-eth">Jumlah ETH: {{ minute_totals.current.eth | format_currency(6) }}</span> | 
+                <span id="current-minute-usd">Jumlah USD: ${{ minute_totals.current.usd | format_currency(2) }}</span>
+            </p>
+            <p class="amount-display">
+                <span class="time-label">1 Menit Sebelumnya:</span> 
+                <span id="previous-minute-eth">Jumlah ETH: {{ minute_totals.previous.eth | format_currency(6) }}</span> | 
+                <span id="previous-minute-usd">Jumlah USD: ${{ minute_totals.previous.usd | format_currency(2) }}</span>
+            </p>
+            {# --- TAMBAHAN KODE MODIFIKASI BERAKHIR DI SINI --- #}
+            
         </div>
 
         {% if error %}
@@ -276,9 +302,15 @@
              let parts = formatted.split('.');
              if (parts.length > 1) {
                  const decimal_part = parts.pop();
-                 return parts.join('.') + ',' + decimal_part;
+                 // Pengecekan untuk nilai di bawah 1000
+                 if (parts[0].length > 3) {
+                     // Lakukan pemformatan ribuan jika perlu
+                     parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+                 }
+                 return parts.join('') + ',' + decimal_part;
              }
-             return formatted + ',' + '0'.repeat(precision);
+             // Handle kasus integer murni (tanpa titik desimal)
+             return formatted.replace(/\B(?=(\d{3})+(?!\d))/g, ".") + ',' + '0'.repeat(precision);
         }
 
         // --- FUNGSI UTAMA UNTUK MEMPERBARUI DATA ---
@@ -304,6 +336,14 @@
                         ethPriceDisplay.innerHTML = `Harga ETH Saat Ini: **$${format_currency_js(data.eth_price, 2)}**`; 
                     }
                     
+                    // 3. Perbarui Nominal Per Menit (TAMBAHAN INI)
+                    if (data.minute_totals) {
+                        document.getElementById('current-minute-eth').textContent = `Jumlah ETH: ${format_currency_js(data.minute_totals.current.eth, 6)}`;
+                        document.getElementById('current-minute-usd').textContent = `Jumlah USD: $${format_currency_js(data.minute_totals.current.usd, 2)}`;
+                        document.getElementById('previous-minute-eth').textContent = `Jumlah ETH: ${format_currency_js(data.minute_totals.previous.eth, 6)}`;
+                        document.getElementById('previous-minute-usd').textContent = `Jumlah USD: $${format_currency_js(data.minute_totals.previous.usd, 2)}`;
+                    }
+
                     // Sembunyikan pesan error dan tampilkan tabel jika berhasil
                     const table = document.getElementById('transactions-table');
                     const errorMessage = document.getElementById('data-error-message');
@@ -317,8 +357,12 @@
                     // Tampilkan pesan error jika pembaruan gagal
                     console.error("Gagal memperbarui data:", data.error);
                     const mainContent = document.getElementById('main-content');
-                    if (mainContent) {
-                        mainContent.innerHTML = `<p class="error">Kesalahan: ${data.error}. Harap periksa koneksi Termux/API Blockscout.</p>`;
+                    // Mengganti konten utama dengan pesan error hanya jika benar-benar gagal total
+                    // mainContent.innerHTML = `<p class="error">Kesalahan: ${data.error}. Harap periksa koneksi Termux/API Blockscout.</p>`;
+                    const errorMessage = document.getElementById('data-error-message');
+                    if(errorMessage) {
+                         errorMessage.textContent = `Kesalahan: ${data.error}. Harap periksa koneksi Termux/API Blockscout.`;
+                         errorMessage.style.display = 'block';
                     }
                 }
 
@@ -326,7 +370,12 @@
                 console.error('Kesalahan Jaringan saat mengambil pembaruan:', error);
                 const mainContent = document.getElementById('main-content');
                 if (mainContent) {
-                    mainContent.innerHTML = `<p class="error">Kesalahan Jaringan: ${error.message}. Tidak dapat terhubung ke server Flask.</p>`;
+                    // mainContent.innerHTML = `<p class="error">Kesalahan Jaringan: ${error.message}. Tidak dapat terhubung ke server Flask.</p>`;
+                    const errorMessage = document.getElementById('data-error-message');
+                    if(errorMessage) {
+                         errorMessage.textContent = `Kesalahan Jaringan: ${error.message}. Tidak dapat terhubung ke server Flask.`;
+                         errorMessage.style.display = 'block';
+                    }
                 }
             }
         };
@@ -340,7 +389,6 @@
             const mainContent = document.getElementById('main-content');
 
             // Hitungan Mundur Tambahan (60s / 1 menit)
-            // UBAH NILAI INI DARI 10 KE 60
             let count60s = 60; 
             const timerContainer60s = document.getElementById('timer-10s-container');
             const timerDisplay60s = document.getElementById('timer-10s-display');
