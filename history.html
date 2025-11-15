@@ -168,7 +168,7 @@
             <h2>{{ address }}</h2>
             <p>Data diambil dari Blockscout API. Urutan: Terbaru ke Terlama.</p> 
             {% if eth_price_usd %}
-                <p>Harga ETH Saat Ini: **${{ eth_price_usd | round(2) }}**</p>
+                <p>Harga ETH Saat Ini: **${{ eth_price_usd | format_currency(2) }}**</p>
             {% endif %}
         </div>
 
@@ -184,7 +184,8 @@
                         <th>Dari</th>
                         <th>Ke</th>
                         <th>Jumlah (ETH)</th>
-                        <th>Jumlah (USD)</th> <th>Hash Transaksi</th>
+                        <th>Jumlah (USD)</th>
+                        <th>Hash Transaksi</th>
                         <th>Status</th>
                     </tr>
                 </thead>
@@ -202,7 +203,14 @@
                                 {{ tx.to[:6] }}...{{ tx.to[-4:] }}
                             </a>
                         </td>
-                        <td>{{ tx.value_eth | round(6) }}</td> <td>{{ tx.value_usd | round(2) }}</td> <td class="hash">
+                        
+                        {# MODIFIKASI: Menggunakan filter format_currency(6) untuk ETH #}
+                        <td>{{ tx.value_eth | format_currency(6) }}</td> 
+                        
+                        {# MODIFIKASI: Menggunakan filter format_currency(2) untuk USD #}
+                        <td>{{ tx.value_usd | format_currency(2) }}</td> 
+                        
+                        <td class="hash">
                             <a href="https://eth.blockscout.com/tx/{{ tx.hash }}" target="_blank" title="Lihat di Blockscout">
                                 {{ tx.hash[:10] }}...
                             </a>
