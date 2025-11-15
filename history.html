@@ -185,7 +185,7 @@
     </div>
     
     <div id="timer-10s-container">
-        <div id="timer-10s-display">10</div>
+        <div id="timer-10s-display">60</div> 
     </div>
 
     <div class="container" id="main-content" style="display: none;">
@@ -264,7 +264,6 @@
     
     <script>
         // Fungsi sederhana untuk memformat mata uang yang didapatkan dari API Flask (jika menggunakan format standar)
-        // Kita tidak akan menggunakan ini karena pemformatan dilakukan di backend, tapi disiapkan jika harga ETH perlu di-format
         function format_currency_js(value, precision = 2) {
              if (value === null || typeof value === 'undefined') return "0";
              const num = parseFloat(value);
@@ -340,26 +339,27 @@
             const overlay = document.getElementById('countdown-overlay');
             const mainContent = document.getElementById('main-content');
 
-            // Hitungan Mundur Tambahan (10s)
-            let count10s = 10;
-            const timerContainer10s = document.getElementById('timer-10s-container');
-            const timerDisplay10s = document.getElementById('timer-10s-display');
-            let countdownInterval10s; 
+            // Hitungan Mundur Tambahan (60s / 1 menit)
+            // UBAH NILAI INI DARI 10 KE 60
+            let count60s = 60; 
+            const timerContainer60s = document.getElementById('timer-10s-container');
+            const timerDisplay60s = document.getElementById('timer-10s-display');
+            let countdownInterval60s; 
             
-            // Fungsi untuk memulai/ulang hitungan 10s
-            const startCountdown10s = () => {
+            // Fungsi untuk memulai/ulang hitungan 60s
+            const startCountdown60s = () => {
                 // Hentikan interval lama jika ada
-                if (countdownInterval10s) {
-                    clearInterval(countdownInterval10s);
+                if (countdownInterval60s) {
+                    clearInterval(countdownInterval60s);
                 }
                 
-                // Reset hitungan 10s
-                count10s = 10; 
-                timerContainer10s.style.opacity = 1; // Pastikan timer terlihat
+                // Reset hitungan 60s
+                count60s = 60; 
+                timerContainer60s.style.opacity = 1; // Pastikan timer terlihat
                 
                 // Jalankan interval
-                countdownInterval10s = setInterval(updateCountdown10s, 1000);
-                updateCountdown10s(); // Panggil sekali segera
+                countdownInterval60s = setInterval(updateCountdown60s, 1000);
+                updateCountdown60s(); // Panggil sekali segera
             };
 
 
@@ -372,8 +372,8 @@
                     overlay.style.display = 'none';
                     mainContent.style.display = 'block';
                     
-                    // Mulai hitungan mundur 10 detik setelah pemuatan awal
-                    startCountdown10s(); 
+                    // Mulai hitungan mundur 60 detik setelah pemuatan awal
+                    startCountdown60s(); 
                     
                     window.scrollTo(0, 0); 
                 }
@@ -381,23 +381,24 @@
                 count5s--;
             };
 
-            // Fungsi untuk memperbarui hitungan 10s - MODIFIKASI INI
-            const updateCountdown10s = () => {
-                timerDisplay10s.textContent = count10s;
+            // Fungsi untuk memperbarui hitungan 60s - MODIFIKASI INI
+            const updateCountdown60s = () => {
+                // Gunakan timerDisplay60s (alias 'timer-10s-display' di HTML)
+                timerDisplay60s.textContent = count60s; 
                 
-                if (count10s <= 0) {
-                    // Ketika hitungan mundur 10 detik selesai:
+                if (count60s <= 0) {
+                    // Ketika hitungan mundur 60 detik selesai:
                     
                     // 1. Panggil fungsi untuk memperbarui data tabel
                     updateTransactionData();
                     
-                    // 2. Mulai kembali hitungan mundur 10 detik
-                    startCountdown10s();
+                    // 2. Mulai kembali hitungan mundur 60 detik
+                    startCountdown60s();
                     
-                    return; // Keluar dari fungsi updateCountdown10s
+                    return; 
                 }
                 
-                count10s--;
+                count60s--;
             };
 
             // Jalankan fungsi updateCountdown 5s setiap 1 detik
