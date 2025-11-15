@@ -5,14 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Riwayat Transaksi Wallet Ethereum</title>
     <style>
-        /* Variabel Warna Hijau Neon untuk Loader */
-        :root {
-            --color-active: #39FF14; 
-            --color-inactive: #33363b; 
-            --color-background: #000;
-            --color-center-bg: #101117; 
-        }
-
         /* TEMA GELAP UTAMA */
         body { 
             align-items: center;
@@ -21,10 +13,6 @@
             padding: 0px;
             background-color: #001; /* Latar Belakang Sangat Gelap */
             color: #c9d1d9; /* Teks Utama Putih Keabu-abuan */
-            /* Mengatur ulang min-height dan display untuk Loader agar posisinya stabil */
-            display: flex; 
-            flex-direction: column;
-            min-height: 100vh;
         }
         
         .container { 
@@ -32,78 +20,14 @@
             margin: 20px auto; 
             background: #005; /* Latar Belakang Kontainer */
             padding: 0px;
-            width: 100%;
         }
         
-        /* --- STYLE LOADER HITUNGAN MUNDUR (Dimodifikasi untuk Posisi) --- */
-        .loader-container {
-            position: absolute; /* Posisikan secara mutlak */
-            top: 20px; /* Jarak dari atas */
-            right: 20px; /* Jarak dari kanan */
-            width: 30px;
-            height: 30px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000; /* Pastikan di atas konten utama */
-        }
-
-        .loader {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: conic-gradient(from 0deg, var(--color-inactive) 0%, var(--color-inactive) 100%); 
-            box-shadow: 0 0 7px #39FF14, inset 0 0 5px #000;
-        }
-
-        .glow-effect {
-            position: absolute;
-            width: 110%;
-            height: 110%;
-            border-radius: 50%;
-            opacity: 0.3;
-            animation: glow-pulse 3s infinite ease-in-out;
-        }
-
-        @keyframes glow-pulse {
-            0% { transform: scale(0.95); opacity: 0.3; }
-            50% { transform: scale(1); opacity: 0.5; }
-            100% { transform: scale(0.95); opacity: 0.3; }
-        }
-
-        .loader::before {
-            content: '';
-            position: absolute;
-            width: 75%; 
-            height: 75%; 
-            background-color: var(--color-center-bg); 
-            border-radius: 50%;
-            z-index: 1;
-        }
-
-        .percentage {
-            position: relative;
-            font-size: 10px; 
-            font-weight: 600;
-            z-index: 2;
-            transition: transform 0.5s ease;
-            color: #e6f7ff; /* Agar terlihat di atas background */
-            text-shadow: 0 0 5px var(--color-active); 
-        }
-        /* --- AKHIR STYLE LOADER HITUNGAN MUNDUR --- */
-
-
         /* JUDUL */
         .title-box {
             text-align: center;
             margin-bottom: 30px;
             padding-bottom: 10px;
             border-bottom: 2px solid #30363d;
-            position: relative; /* Diperlukan untuk konteks loader-container jika ingin posisinya relatif terhadap container */
         }
 
         h1 { 
@@ -132,7 +56,7 @@
         
         .address-box p {
             color: #8b949e;
-            font-size: 15px;
+            font-size:l 15 px;
         }
 
         .error { 
@@ -150,7 +74,7 @@
             margin-top: 25px; 
             border: 1px solid #30363d;
             border-radius: 6px;
-            overflow: hidden; 
+            overflow: hidden; /* Penting untuk border-radius tabel */
         }
         
         th, td { 
@@ -162,14 +86,14 @@
         }
         
         th { 
-            background-color: #1f2733; 
-            color: #58a6ff; 
+            background-color: #1f2733; /* Header Gelap */
+            color: #58a6ff; /* Teks Header Biru */
             font-weight: bold;
             border-bottom: 2px solid #007bff;
         }
         
         tr:hover { 
-            background-color: #2b323c; 
+            background-color: #2b323c; /* Hover lebih gelap */
         }
 
         /* DETAIL KHUSUS */
@@ -179,7 +103,7 @@
         }
 
         td a {
-            color: #58a6ff; 
+            color: #58a6ff; /* Link biru neon */
             text-decoration: none;
         }
 
@@ -188,34 +112,34 @@
         }
         
         .success { 
-            color: #38b432; 
+            color: #38b432; /* Hijau Sukses */
             font-weight: bold;
         }
         
         .failure { 
-            color: #ff5858; 
+            color: #ff5858; /* Merah Gagal */
             font-weight: bold;
         }
 
-        /* STYLE OVERLAY HITUNGAN MUNDUR UTAMA (5 detik) */
+        /* STYLE OVERLAY HITUNGAN MUNDUR UTAMA */
         #countdown-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: #000; 
-            color: #fff; 
+            background-color: #000; /* Latar Belakang Hitam Solid */
+            color: #fff; /* Teks Putih */
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 9999; 
+            z-index: 9999; /* Pastikan di atas semua elemen */
             text-align: center;
         }
 
         #countdown-overlay h3 {
-            color: #00ff73; 
+            color: #00ff73; /* Hijau neon */
             margin-bottom: 20px;
             font-size: 24px;
         }
@@ -223,22 +147,45 @@
         #countdown-timer {
             font-size: 60px;
             font-weight: bold;
-            color: #ffcc00; 
+            color: #ffcc00; /* Kuning/Emas untuk penekanan */
+        }
+
+        /* --- STYLE BARU UNTUK HITUNGAN MUNDUR 10S --- */
+
+        #timer-10s-container {
+            position: fixed;
+            top: 10px; /* Jarak dari atas */
+            right: 10px; /* Jarak dari kanan */
+            width: 30px; /* Diameter */
+            height: 30px; /* Diameter */
+            z-index: 999; /* Di atas konten utama, di bawah overlay */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #21262d; /* Latar Belakang Gelap */
+            border-radius: 50%;
+            border: 2px solid #00ff73; /* Border Hijau Neon */
+            box-shadow: 0 0 5px #00ff73; /* Efek Neon */
+            opacity: 0; /* Sembunyikan saat overlay masih tampil */
+            transition: opacity 0.5s;
+        }
+
+        #timer-10s-display {
+            font-size: 14px; /* Ukuran font yang sesuai */
+            font-weight: bold;
+            color: #00ff73; /* Teks Hijau Neon */
         }
     </style>
 </head>
 <body>
-    
-    <div class="loader-container">
-        <div class="loader" id="neon-loader">
-            <div class="glow-effect"></div>
-            <span class="percentage" id="loader-text">10s</span>
-        </div>
-    </div>
     <div id="countdown-overlay">
         <h3>⏳ Menjaga Batas Akses API...</h3>
         <p>Halaman akan dimuat setelah hitungan mundur:</p>
         <div id="countdown-timer">5</div>
+    </div>
+    
+    <div id="timer-10s-container">
+        <div id="timer-10s-display">10</div>
     </div>
 
     <div class="container" id="main-content" style="display: none;">
@@ -316,113 +263,60 @@
     </div>
     
     <script>
-        // --- SCRIPT HITUNGAN MUNDUR 10 DETIK NEON ---
-        document.addEventListener('DOMContentLoaded', () => {
-            const countdownTextNeon = document.getElementById('loader-text');
-            const loaderNeon = document.getElementById('neon-loader');
-            
-            // Variabel untuk warna, sesuai dengan CSS root
-            const activeColor = '#39FF14'; 
-            const inactiveColor = '#33363b';
-            const backgroundColor = '#000';
-            
-            const totalDurationSeconds = 16; 
-            const totalDurationMs = totalDurationSeconds * 1000; 
-            
-            const stepTime = 100; // Frekuensi pembaruan
-            
-            let timeLeftMs = totalDurationMs;
-
-            const neonInterval = setInterval(() => {
-                timeLeftMs -= stepTime; 
-
-                const progressPercentage = 100 - (timeLeftMs / totalDurationMs) * 100;
-                // Menggunakan Math.ceil untuk menampilkan hitungan mundur 10, 9, 8...
-                const secondsLeft = Math.ceil(timeLeftMs / 1000); 
-
-                // --- LOGIKA SEGMENTASI UNTUK CSS ---
-                const segmentSize = 360 / totalDurationSeconds; 
-
-                let gradientString = 'conic-gradient(from 0deg';
-                
-                for (let i = 0; i <= totalDurationSeconds; i++) {
-                    const startDeg = i * segmentSize; 
-                    const endDeg = startDeg + (segmentSize * 0.9); 
-                    
-                    const percentComplete = (startDeg / 360) * 100;
-                    const isActive = progressPercentage >= percentComplete;
-                    
-                    const segmentColor = isActive ? activeColor : inactiveColor;
-                    
-                    gradientString += `, ${segmentColor} ${startDeg}deg, ${segmentColor} ${endDeg}deg`;
-                    
-                    if (i < totalDurationSeconds) {
-                        const gapStartDeg = endDeg;
-                        const gapEndDeg = (i + 1) * segmentSize;
-                        // Celah hitam di antara segmen
-                        gradientString += `, ${backgroundColor} ${gapStartDeg}deg, ${backgroundColor} ${gapEndDeg}deg`;
-                    }
-                }
-
-                gradientString += ')';
-                // --- AKHIR LOGIKA SEGMENTASI ---
-
-
-                if (timeLeftMs <= 0) {
-                    clearInterval(neonInterval);
-                    countdownTextNeon.textContent = "0s";
-                    // Setelah selesai, pastikan semua segmen terisi aktif
-                    let finalGradient = 'conic-gradient(from 0deg';
-                    for (let i = 0; i < totalDurationSeconds; i++) {
-                        const startDeg = i * segmentSize;
-                        const endDeg = startDeg + (segmentSize * 0.9);
-                        finalGradient += `, ${activeColor} ${startDeg}deg, ${activeColor} ${endDeg}deg`;
-                        if (i < totalDurationSeconds - 1) {
-                            finalGradient += `, ${backgroundColor} ${endDeg}deg, ${backgroundColor} ${(i + 1) * segmentSize}deg`;
-                        }
-                    }
-                    finalGradient += ')';
-                    loaderNeon.style.background = finalGradient;
-
-                } else {
-                    countdownTextNeon.textContent = `${secondsLeft}s`;
-                    loaderNeon.style.background = gradientString;
-                }
-
-            }, stepTime);
-        });
-        // --- AKHIR SCRIPT HITUNGAN MUNDUR 10 DETIK NEON ---
-
-
-        // --- SCRIPT HITUNGAN MUNDUR OVERLAY 5 DETIK ---
         document.addEventListener('DOMContentLoaded', (event) => {
-            let count = 5;
-            const timerDisplay = document.getElementById('countdown-timer');
+            // Hitungan Mundur Utama (5s)
+            let count5s = 5;
+            const timerDisplay5s = document.getElementById('countdown-timer');
             const overlay = document.getElementById('countdown-overlay');
             const mainContent = document.getElementById('main-content');
 
-            // Fungsi untuk memperbarui hitungan
-            const updateCountdown = () => {
-                timerDisplay.textContent = count;
+            // Hitungan Mundur Tambahan (10s) - BARU
+            let count10s = 10;
+            const timerContainer10s = document.getElementById('timer-10s-container');
+            const timerDisplay10s = document.getElementById('timer-10s-display');
+            let countdownInterval10s; // Variabel untuk interval 10s
+
+            // Fungsi untuk memperbarui hitungan 5s
+            const updateCountdown5s = () => {
+                timerDisplay5s.textContent = count5s;
                 
-                if (count <= 0) {
-                    clearInterval(countdownInterval);
+                if (count5s <= 0) {
+                    clearInterval(countdownInterval5s);
                     // Sembunyikan overlay dan tampilkan konten utama
                     overlay.style.display = 'none';
                     mainContent.style.display = 'block';
+                    timerContainer10s.style.opacity = 1; // Tampilkan timer 10s
+                    
+                    // Mulai hitungan mundur 10 detik
+                    countdownInterval10s = setInterval(updateCountdown10s, 2000);
+                    updateCountdown10s(); // Panggil sekali segera untuk menampilkan '10'
+                    
+                    // Gulir ke atas untuk konten baru
                     window.scrollTo(0, 0); 
                 }
                 
-                count--;
+                count5s--;
             };
 
-            // Jalankan fungsi updateCountdown setiap 1 detik
-            const countdownInterval = setInterval(updateCountdown, 1000);
+            // Fungsi untuk memperbarui hitungan 10s - BARU
+            const updateCountdown10s = () => {
+                timerDisplay10s.textContent = count10s;
+                
+                if (count10s <= 0) {
+                    clearInterval(countdownInterval10s);
+                    timerContainer10s.style.opacity = 0; // Sembunyikan timer 10s saat selesai
+                    // Anda bisa menambahkan aksi lain di sini setelah timer 10s selesai (misalnya refresh data)
+                }
+                
+                count10s--;
+            };
 
-            // Panggil updateCountdown sekali segera untuk menampilkan '5'
-            updateCountdown(); 
+            // Jalankan fungsi updateCountdown 5s setiap 1 detik
+            const countdownInterval5s = setInterval(updateCountdown5s, 1000);
+
+            // Panggil updateCountdown 5s sekali segera untuk menampilkan '5'
+            updateCountdown5s(); 
         });
-        // --- AKHIR SCRIPT HITUNGAN MUNDUR OVERLAY 5 DETIK ---
     </script>
 </body>
 </html>
