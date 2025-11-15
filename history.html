@@ -204,10 +204,10 @@
                             </a>
                         </td>
                         
-                        {# MODIFIKASI: Menggunakan filter format_currency(6) untuk ETH #}
+                        {# Menerapkan filter kustom untuk format angka Indonesia (6 desimal untuk ETH) #}
                         <td>{{ tx.value_eth | format_currency(6) }}</td> 
                         
-                        {# MODIFIKASI: Menggunakan filter format_currency(2) untuk USD #}
+                        {# Menerapkan filter kustom untuk format angka Indonesia (2 desimal untuk USD) #}
                         <td>{{ tx.value_usd | format_currency(2) }}</td> 
                         
                         <td class="hash">
