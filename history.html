@@ -205,7 +205,8 @@
             <hr style="border: 1px solid #30363d; margin: 10px 0;">
             <h3>Total Nominal (1 Menit Terbaru)</h3>
             {% if minute_sums and minute_sums.latest %}
-                <p id="latest-range-display" style="font-size: 14px;">Rentang (Lokal): **{{ minute_sums.latest.range_local }}**</p>
+                {# DIPERBAIKI: Mengganti label (Lokal) menjadi (WIB) #}
+                <p id="latest-range-display" style="font-size: 14px;">Rentang (WIB): **{{ minute_sums.latest.range_local }}**</p>
                 <p id="latest-eth-display"> Jumlah ETH : **{{ minute_sums.latest.eth | format_currency(6) }}**</p>
                 <p id="latest-usd-display"> Jumlah USD : **${{ minute_sums.latest.usd | format_currency(2) }}**</p>
             {% endif %}
@@ -214,7 +215,8 @@
             <hr style="border: 1px solid #30363d; margin: 10px 0;">
             <h3>Total Nominal (1 Menit Sebelumnya)</h3>
             {% if minute_sums and minute_sums.previous %}
-                <p id="previous-range-display" style="font-size: 14px;">Rentang (Lokal): **{{ minute_sums.previous.range_local }}**</p>
+                {# DIPERBAIKI: Mengganti label (Lokal) menjadi (WIB) #}
+                <p id="previous-range-display" style="font-size: 14px;">Rentang (WIB): **{{ minute_sums.previous.range_local }}**</p>
                 <p id="previous-eth-display"> Jumlah ETH : **{{ minute_sums.previous.eth | format_currency(6) }}**</p>
                 <p id="previous-usd-display"> Jumlah USD : **${{ minute_sums.previous.usd | format_currency(2) }}**</p>
             {% endif %}
@@ -327,12 +329,14 @@
                     const sums = data.minute_sums;
                     if (sums) {
                         // Terbaru
-                        document.getElementById('latest-range-display').innerHTML = `Rentang (Lokal): **${sums.latest.range_local}**`;
+                        // PERBAIKAN: Mengganti label (Lokal) menjadi (WIB)
+                        document.getElementById('latest-range-display').innerHTML = `Rentang (WIB): **${sums.latest.range_local.replace('(Lokal)', '').replace('(WIB)', '').trim()}** (WIB)`;
                         document.getElementById('latest-eth-display').innerHTML = ` Jumlah ETH : **${format_currency_js(sums.latest.eth, 6)}**`;
                         document.getElementById('latest-usd-display').innerHTML = ` Jumlah USD : **$${format_currency_js(sums.latest.usd, 2)}**`;
                         
                         // Sebelumnya
-                        document.getElementById('previous-range-display').innerHTML = `Rentang (Lokal): **${sums.previous.range_local}**`;
+                        // PERBAIKAN: Mengganti label (Lokal) menjadi (WIB)
+                        document.getElementById('previous-range-display').innerHTML = `Rentang (WIB): **${sums.previous.range_local.replace('(Lokal)', '').replace('(WIB)', '').trim()}** (WIB)`;
                         document.getElementById('previous-eth-display').innerHTML = ` Jumlah ETH : **${format_currency_js(sums.previous.eth, 6)}**`;
                         document.getElementById('previous-usd-display').innerHTML = ` Jumlah USD : **$${format_currency_js(sums.previous.usd, 2)}**`;
                     }
