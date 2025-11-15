@@ -282,7 +282,7 @@
     </div>
     
     <script>
-        // Fungsi sederhana untuk memformat mata uang yang didapatkan dari API Flask
+        // Fungsi sederhana untuk memformat mata uang yang didapatkan dari API Flask (jika menggunakan format standar)
         function format_currency_js(value, precision = 2) {
              if (value === null || typeof value === 'undefined') return "0";
              const num = parseFloat(value);
@@ -299,76 +299,6 @@
              }
              return formatted + ',' + '0'.repeat(precision);
         }
-        
-        /**
-         * Mengkonversi string waktu lokal dari format YYYY-MM-DD HH:MM:SS
-         * yang dihasilkan oleh Flask (yang sebenarnya UTC) ke WIB (+7 jam).
-         * @param {string} range_local - Rentang waktu dalam format "2025-11-15 15:28:00 - 2025-11-15 15:29:00 (Lokal)"
-         * @returns {string} Rentang waktu yang sudah disesuaikan ke WIB.
-         */
-        function adjust_to_wib(range_local) {
-            // Hapus label "(Lokal)" di akhir
-            let clean_range = range_local.replace(' (Lokal)', '').trim();
-            // Pisahkan menjadi dua titik waktu
-            const parts = clean_range.split(' - ');
-
-            if (parts.length !== 2) return range_local; // Kembali jika format tidak sesuai
-
-            const adjust_single_time = (time_str) => {
-                // Ambil tanggal dan waktu dari string
-                // Contoh: '2025-11-15 15:28:00'
-                
-                // Gunakan konstruktor Date dengan asumsi input adalah UTC
-                // Format: YYYY-MM-DDTHH:MM:SSZ (Z menandakan UTC/Zulu Time)
-                const date_utc = new Date(time_str.replace(' ', 'T') + 'Z');
-
-                // Tambah 7 jam (7 * 60 * 60 * 1000 milidetik)
-                date_utc.setTime(date_utc.getTime() + (0 * 60 * 60 * 1000));
-
-                // Format kembali ke string YYYY-MM-DD HH:MM:SS
-                const year = date_utc.getFullYear();
-                const month = String(date_utc.getMonth() + 1).padStart(2, '0');
-                const day = String(date_utc.getDate()).padStart(2, '0');
-                const hours = String(date_utc.getHours()).padStart(2, '0');
-                const minutes = String(date_utc.getMinutes()).padStart(2, '0');
-                const seconds = String(date_utc.getSeconds()).padStart(2, '0');
-
-                return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-            };
-
-            const start_wib = adjust_single_time(parts[0]);
-            const end_wib = adjust_single_time(parts[1]);
-
-            return `Rentang (WIB): **${start_wib} - ${end_wib}**`;
-        }
-
-        /**
-         * Fungsi untuk memperbarui tampilan nominal 1 menit setelah data berhasil diambil.
-         * @param {object} sums - Objek minute_sums dari respons JSON.
-         */
-        function update_minute_sums_display(sums) {
-            if (!sums) return;
-
-            // Terbaru
-            const latestRangeElement = document.getElementById('latest-range-display');
-            if (latestRangeElement) {
-                 const newRangeText = adjust_to_wib(sums.latest.range_local);
-                 latestRangeElement.innerHTML = newRangeText;
-            }
-            
-            document.getElementById('latest-eth-display').innerHTML = ` Jumlah ETH : **${format_currency_js(sums.latest.eth, 6)}**`;
-            document.getElementById('latest-usd-display').innerHTML = ` Jumlah USD : **$${format_currency_js(sums.latest.usd, 2)}**`;
-            
-            // Sebelumnya
-            const previousRangeElement = document.getElementById('previous-range-display');
-            if (previousRangeElement) {
-                const newRangeText = adjust_to_wib(sums.previous.range_local);
-                previousRangeElement.innerHTML = newRangeText;
-            }
-            document.getElementById('previous-eth-display').innerHTML = ` Jumlah ETH : **${format_currency_js(sums.previous.eth, 6)}**`;
-            document.getElementById('previous-usd-display').innerHTML = ` Jumlah USD : **$${format_currency_js(sums.previous.usd, 2)}**`;
-        }
-
 
         // --- FUNGSI UTAMA UNTUK MEMPERBARUI DATA ---
         const updateTransactionData = async () => {
@@ -394,8 +324,18 @@
                     }
                     
                     // 3. Perbarui Total Nominal 1 Menit (Tambahan Baru)
-                    // Panggil fungsi baru untuk update dan koreksi waktu ke WIB
-                    update_minute_sums_display(data.minute_sums);
+                    const sums = data.minute_sums;
+                    if (sums) {
+                        // Terbaru
+                        document.getElementById('latest-range-display').innerHTML = `Rentang (Lokal): **${sums.latest.range_local}**`;
+                        document.getElementById('latest-eth-display').innerHTML = ` Jumlah ETH : **${format_currency_js(sums.latest.eth, 6)}**`;
+                        document.getElementById('latest-usd-display').innerHTML = ` Jumlah USD : **$${format_currency_js(sums.latest.usd, 2)}**`;
+                        
+                        // Sebelumnya
+                        document.getElementById('previous-range-display').innerHTML = `Rentang (Lokal): **${sums.previous.range_local}**`;
+                        document.getElementById('previous-eth-display').innerHTML = ` Jumlah ETH : **${format_currency_js(sums.previous.eth, 6)}**`;
+                        document.getElementById('previous-usd-display').innerHTML = ` Jumlah USD : **$${format_currency_js(sums.previous.usd, 2)}**`;
+                    }
                     
                     // Sembunyikan pesan error dan tampilkan tabel jika berhasil
                     const table = document.getElementById('transactions-table');
@@ -432,30 +372,8 @@
             const overlay = document.getElementById('countdown-overlay');
             const mainContent = document.getElementById('main-content');
 
-            // --- FUNGSI BARU: Koreksi waktu pada pemuatan awal ---
-            // Fungsi ini dipanggil setelah data pertama kali dirender oleh Jinja.
-            const initialWIBAdjustment = () => {
-                 const latestRangeElement = document.getElementById('latest-range-display');
-                 const previousRangeElement = document.getElementById('previous-range-display');
-
-                 if (latestRangeElement) {
-                    // Ambil teks asli dari Jinja dan koreksi ke WIB
-                    const originalText = latestRangeElement.innerText.trim().replace('Rentang (Lokal): **', '').replace('**', '');
-                    const newRangeText = adjust_to_wib(originalText);
-                    latestRangeElement.innerHTML = newRangeText;
-                 }
-
-                 if (previousRangeElement) {
-                    // Ambil teks asli dari Jinja dan koreksi ke WIB
-                    const originalText = previousRangeElement.innerText.trim().replace('Rentang (Lokal): **', '').replace('**', '');
-                    const newRangeText = adjust_to_wib(originalText);
-                    previousRangeElement.innerHTML = newRangeText;
-                 }
-            };
-            // -----------------------------------------------------
-
-
             // Hitungan Mundur Tambahan (60s / 1 menit)
+            // UBAH NILAI INI DARI 10 KE 60
             let count60s = 60; 
             const timerContainer60s = document.getElementById('timer-10s-container');
             const timerDisplay60s = document.getElementById('timer-10s-display');
@@ -487,9 +405,6 @@
                     overlay.style.display = 'none';
                     mainContent.style.display = 'block';
                     
-                    // Panggil koreksi WIB setelah konten utama dimuat oleh Jinja
-                    initialWIBAdjustment(); 
-
                     // Mulai hitungan mundur 60 detik setelah pemuatan awal
                     startCountdown60s(); 
                     
