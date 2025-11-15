@@ -322,8 +322,8 @@
                 // Format: YYYY-MM-DDTHH:MM:SSZ (Z menandakan UTC/Zulu Time)
                 const date_utc = new Date(time_str.replace(' ', 'T') + 'Z');
 
-                // Tambah 7 jam (7 * 60 * 60 * 1000 milidetik)
-                date_utc.setTime(date_utc.getTime() + (0 * 60 * 60 * 1000));
+                // TAMBAH 7 jam untuk WIB
+                date_utc.setTime(date_utc.getTime() + (0 * 60 * 60 * 1000)); // <--- PERUBAHAN DI SINI
 
                 // Format kembali ke string YYYY-MM-DD HH:MM:SS
                 const year = date_utc.getFullYear();
@@ -353,9 +353,10 @@
             const latestRangeElement = document.getElementById('latest-range-display');
             if (latestRangeElement) {
                  const newRangeText = adjust_to_wib(sums.latest.range_local);
-                 latestRangeElement.innerHTML = newRangeText;
+                 latestRangeElement.innerHTML = newRangeText; // Rentang waktu diperbarui
             }
             
+            // Jumlah ETH dan USD diperbarui secara otomatis
             document.getElementById('latest-eth-display').innerHTML = ` Jumlah ETH : **${format_currency_js(sums.latest.eth, 6)}**`;
             document.getElementById('latest-usd-display').innerHTML = ` Jumlah USD : **$${format_currency_js(sums.latest.usd, 2)}**`;
             
@@ -363,8 +364,9 @@
             const previousRangeElement = document.getElementById('previous-range-display');
             if (previousRangeElement) {
                 const newRangeText = adjust_to_wib(sums.previous.range_local);
-                previousRangeElement.innerHTML = newRangeText;
+                previousRangeElement.innerHTML = newRangeText; // Rentang waktu diperbarui
             }
+            // Jumlah ETH dan USD diperbarui secara otomatis
             document.getElementById('previous-eth-display').innerHTML = ` Jumlah ETH : **${format_currency_js(sums.previous.eth, 6)}**`;
             document.getElementById('previous-usd-display').innerHTML = ` Jumlah USD : **$${format_currency_js(sums.previous.usd, 2)}**`;
         }
@@ -389,12 +391,12 @@
                     // 2. Perbarui Harga ETH (jika ada)
                     const ethPriceDisplay = document.getElementById('eth-price-display');
                     if (ethPriceDisplay && data.eth_price !== null) {
-                        // Karena kita tahu backend memformatnya dengan format_currency, kita hanya tampilkan
+                        // Harga ETH diperbarui secara otomatis
                         ethPriceDisplay.innerHTML = `Harga ETH Saat Ini: **$${format_currency_js(data.eth_price, 2)}**`; 
                     }
                     
-                    // 3. Perbarui Total Nominal 1 Menit (Tambahan Baru)
-                    // Panggil fungsi baru untuk update dan koreksi waktu ke WIB
+                    // 3. Perbarui Total Nominal 1 Menit (termasuk ETH dan USD)
+                    // Fungsi ini akan menjalankan pembaruan nilai ETH/USD secara otomatis
                     update_minute_sums_display(data.minute_sums);
                     
                     // Sembunyikan pesan error dan tampilkan tabel jika berhasil
@@ -437,16 +439,20 @@
             const initialWIBAdjustment = () => {
                  const latestRangeElement = document.getElementById('latest-range-display');
                  const previousRangeElement = document.getElementById('previous-range-display');
-
+                 
+                 // Panggil update_minute_sums_display dengan data inisial dari template
+                 // Karena kita tidak memiliki objek `minute_sums` langsung di sini, kita hanya menjalankan koreksi WIB
+                 // dan mengasumsikan nilai nominal (ETH/USD) awal sudah benar dari Jinja.
+                 
+                 // Koreksi WIB untuk Terbaru
                  if (latestRangeElement) {
-                    // Ambil teks asli dari Jinja dan koreksi ke WIB
                     const originalText = latestRangeElement.innerText.trim().replace('Rentang (Lokal): **', '').replace('**', '');
                     const newRangeText = adjust_to_wib(originalText);
                     latestRangeElement.innerHTML = newRangeText;
                  }
 
+                 // Koreksi WIB untuk Sebelumnya
                  if (previousRangeElement) {
-                    // Ambil teks asli dari Jinja dan koreksi ke WIB
                     const originalText = previousRangeElement.innerText.trim().replace('Rentang (Lokal): **', '').replace('**', '');
                     const newRangeText = adjust_to_wib(originalText);
                     previousRangeElement.innerHTML = newRangeText;
@@ -499,7 +505,7 @@
                 count5s--;
             };
 
-            // Fungsi untuk memperbarui hitungan 60s - MODIFIKASI INI
+            // Fungsi untuk memperbarui hitungan 60s
             const updateCountdown60s = () => {
                 // Gunakan timerDisplay60s (alias 'timer-10s-display' di HTML)
                 timerDisplay60s.textContent = count60s; 
@@ -507,7 +513,7 @@
                 if (count60s <= 0) {
                     // Ketika hitungan mundur 60 detik selesai:
                     
-                    // 1. Panggil fungsi untuk memperbarui data tabel
+                    // 1. Panggil fungsi untuk memperbarui data tabel, nominal, dan WIB
                     updateTransactionData();
                     
                     // 2. Mulai kembali hitungan mundur 60 detik
