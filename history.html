@@ -323,7 +323,7 @@
                 const date_utc = new Date(time_str.replace(' ', 'T') + 'Z');
 
                 // Tambah 7 jam (7 * 60 * 60 * 1000 milidetik)
-                date_utc.setTime(date_utc.getTime() + (7 * 60 * 60 * 1000));
+                date_utc.setTime(date_utc.getTime() + (0 * 60 * 60 * 1000));
 
                 // Format kembali ke string YYYY-MM-DD HH:MM:SS
                 const year = date_utc.getFullYear();
