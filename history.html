@@ -175,15 +175,6 @@
             font-weight: bold;
             color: #00ff73; /* Teks Hijau Neon */
         }
-        
-        /* Gaya tambahan untuk indikator loading */
-        .loading-text {
-            color: #007bff;
-            font-weight: bold;
-            text-align: center;
-            padding: 10px;
-        }
-
     </style>
 </head>
 <body>
@@ -207,16 +198,17 @@
             <h2>{{ address }}</h2>
             <p>Data diambil dari Blockscout API. Urutan: Terbaru ke Terlama.</p> 
             {% if eth_price_usd %}
-                <p>Harga ETH Saat Ini: **${{ eth_price_usd | format_currency(2) }}**</p>
+                <p id="eth-price-display">Harga ETH Saat Ini: **${{ eth_price_usd | format_currency(2) }}**</p>
             {% endif %}
         </div>
 
         {% if error %}
-            <p class="error">
+            <p class="error" id="data-error-message">
                 Kesalahan: {{ error }}. Harap periksa jaringan Termux Anda.
             </p>
         {% elif transactions %}
-            <table id="transaction-table"> <thead>
+            <table id="transactions-table">
+                <thead>
                     <tr>
                         <th>Waktu (WIB)</th> 
                         <th>Dari</th>
@@ -227,7 +219,8 @@
                         <th>Status</th>
                     </tr>
                 </thead>
-                <tbody id="transaction-tbody"> {% for tx in transactions %}
+                <tbody id="transactions-tbody">
+                    {% for tx in transactions %}
                     <tr>
                         <td>{{ tx.timeStamp | format_timestamp }}</td> 
                         <td class="hash">
@@ -265,119 +258,146 @@
             </table>
 
         {% else %}
-            <p id="transaction-tbody">Tidak ada transaksi normal yang ditemukan untuk alamat ini, atau ada masalah dengan respons API.</p>
+            <p id="no-transactions-message">Tidak ada transaksi normal yang ditemukan untuk alamat ini, atau ada masalah dengan respons API.</p>
         {% endif %}
     </div>
     
     <script>
+        // Fungsi sederhana untuk memformat mata uang yang didapatkan dari API Flask (jika menggunakan format standar)
+        // Kita tidak akan menggunakan ini karena pemformatan dilakukan di backend, tapi disiapkan jika harga ETH perlu di-format
+        function format_currency_js(value, precision = 2) {
+             if (value === null || typeof value === 'undefined') return "0";
+             const num = parseFloat(value);
+             if (isNaN(num)) return "0";
+             
+             // Format standar JS: ribuan koma, desimal titik
+             const formatted = num.toFixed(precision).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+             
+             // Ganti koma dengan titik untuk ribuan, dan titik dengan koma untuk desimal
+             let parts = formatted.split('.');
+             if (parts.length > 1) {
+                 const decimal_part = parts.pop();
+                 return parts.join('.') + ',' + decimal_part;
+             }
+             return formatted + ',' + '0'.repeat(precision);
+        }
+
+        // --- FUNGSI UTAMA UNTUK MEMPERBARUI DATA ---
+        const updateTransactionData = async () => {
+            console.log("Memperbarui data transaksi...");
+            
+            try {
+                // Panggil endpoint baru di Flask
+                const response = await fetch('/update_data');
+                const data = await response.json();
+
+                if (data.success) {
+                    // 1. Perbarui Baris Tabel (tbody)
+                    const tbody = document.getElementById('transactions-tbody');
+                    if (tbody) {
+                        tbody.innerHTML = data.tbody_html;
+                    }
+
+                    // 2. Perbarui Harga ETH (jika ada)
+                    const ethPriceDisplay = document.getElementById('eth-price-display');
+                    if (ethPriceDisplay && data.eth_price !== null) {
+                        // Karena kita tahu backend memformatnya dengan format_currency, kita hanya tampilkan
+                        ethPriceDisplay.innerHTML = `Harga ETH Saat Ini: **$${format_currency_js(data.eth_price, 2)}**`; 
+                    }
+                    
+                    // Sembunyikan pesan error dan tampilkan tabel jika berhasil
+                    const table = document.getElementById('transactions-table');
+                    const errorMessage = document.getElementById('data-error-message');
+                    const noTxMessage = document.getElementById('no-transactions-message');
+                    
+                    if(table) table.style.display = 'table';
+                    if(errorMessage) errorMessage.style.display = 'none';
+                    if(noTxMessage) noTxMessage.style.display = 'none';
+
+                } else {
+                    // Tampilkan pesan error jika pembaruan gagal
+                    console.error("Gagal memperbarui data:", data.error);
+                    const mainContent = document.getElementById('main-content');
+                    if (mainContent) {
+                        mainContent.innerHTML = `<p class="error">Kesalahan: ${data.error}. Harap periksa koneksi Termux/API Blockscout.</p>`;
+                    }
+                }
+
+            } catch (error) {
+                console.error('Kesalahan Jaringan saat mengambil pembaruan:', error);
+                const mainContent = document.getElementById('main-content');
+                if (mainContent) {
+                    mainContent.innerHTML = `<p class="error">Kesalahan Jaringan: ${error.message}. Tidak dapat terhubung ke server Flask.</p>`;
+                }
+            }
+        };
+        // ---------------------------------------------------
+
         document.addEventListener('DOMContentLoaded', (event) => {
-            // Hitungan Mundur Utama (5s)
+            // ... (Kode Inisialisasi 5s Tetap Sama)
             let count5s = 5;
             const timerDisplay5s = document.getElementById('countdown-timer');
             const overlay = document.getElementById('countdown-overlay');
             const mainContent = document.getElementById('main-content');
 
-            // Hitungan Mundur Tambahan (10s) - MODIF
+            // Hitungan Mundur Tambahan (10s)
             let count10s = 10;
             const timerContainer10s = document.getElementById('timer-10s-container');
             const timerDisplay10s = document.getElementById('timer-10s-display');
-            let countdownInterval10s;
+            let countdownInterval10s; 
             
-            // Elemen Tabel
-            const transactionTbody = document.getElementById('transaction-tbody');
-            const transactionTable = document.getElementById('transaction-table');
-            const initialTableContent = transactionTbody ? transactionTbody.innerHTML : '';
-            
-            // *** FUNGSI BARU UNTUK MEMPERBARUI TABEL ***
-            const fetchAndReplaceTable = async () => {
-                if (!transactionTable) {
-                    console.log("Tabel tidak ditemukan, tidak ada data untuk diperbarui.");
-                    return;
-                }
-                
-                // Tampilkan indikator loading sementara
-                const tableContainer = transactionTable.parentNode;
-                const loadingIndicator = document.createElement('div');
-                loadingIndicator.className = 'loading-text';
-                loadingIndicator.textContent = '🔄 Memuat data baru...';
-                
-                transactionTbody.innerHTML = `<tr><td colspan="7">${loadingIndicator.outerHTML}</td></tr>`;
-
-                try {
-                    // *** GANTI DENGAN ENDPOINT API YANG SESUAI ***
-                    // Endpoint ini harus mengembalikan HANYA konten <tbody> yang baru
-                    // atau seluruh HTML tabel yang baru.
-                    const response = await fetch('/refresh_transactions_fragment'); 
-                    
-                    if (!response.ok) {
-                        throw new Error('Gagal mengambil data: ' + response.statusText);
-                    }
-
-                    // Diasumsikan endpoint mengembalikan string HTML untuk <tbody> yang baru
-                    const newTbodyHtml = await response.text(); 
-                    
-                    // Ganti konten <tbody> saat ini
-                    transactionTbody.innerHTML = newTbodyHtml;
-
-                } catch (error) {
-                    console.error('Kesalahan saat memperbarui tabel:', error);
-                    // Kembalikan konten sebelumnya (opsional) atau tampilkan pesan error
-                    transactionTbody.innerHTML = `<tr><td colspan="7"><p class="error">Gagal memuat: ${error.message}</p></td></tr>`;
-                }
-
-                // Setelah pembaruan selesai, mulai ulang timer 10s
-                startCountdown10s(); 
-            };
-            
-            // Fungsi untuk memulai dan mengelola hitungan 10s
+            // Fungsi untuk memulai/ulang hitungan 10s
             const startCountdown10s = () => {
-                count10s = 10; // Reset counter
+                // Hentikan interval lama jika ada
+                if (countdownInterval10s) {
+                    clearInterval(countdownInterval10s);
+                }
+                
+                // Reset hitungan 10s
+                count10s = 10; 
                 timerContainer10s.style.opacity = 1; // Pastikan timer terlihat
                 
-                if (countdownInterval10s) {
-                    clearInterval(countdownInterval10s); // Hentikan interval lama jika ada
-                }
-                
-                // Mulai interval 10s baru
+                // Jalankan interval
                 countdownInterval10s = setInterval(updateCountdown10s, 1000);
-                updateCountdown10s(); // Panggil sekali segera untuk menampilkan '10'
+                updateCountdown10s(); // Panggil sekali segera
             };
 
-            // Fungsi untuk memperbarui hitungan 10s - MODIF
-            const updateCountdown10s = () => {
-                timerDisplay10s.textContent = count10s;
-                
-                if (count10s <= 0) {
-                    clearInterval(countdownInterval10s);
-                    timerContainer10s.style.opacity = 0; // Sembunyikan timer saat selesai
-                    // *** PANGGIL FUNGSI REFRESH DATA ***
-                    fetchAndReplaceTable(); 
-                    // Perhatikan: startCountdown10s() dipanggil di dalam fetchAndReplaceTable() 
-                    // setelah data berhasil diperbarui atau gagal, untuk menghindari 
-                    // *refresh* berulang kali jika *fetch* lambat.
-                }
-                
-                count10s--;
-            };
-            
+
             // Fungsi untuk memperbarui hitungan 5s
             const updateCountdown5s = () => {
                 timerDisplay5s.textContent = count5s;
                 
                 if (count5s <= 0) {
                     clearInterval(countdownInterval5s);
-                    // Sembunyikan overlay dan tampilkan konten utama
                     overlay.style.display = 'none';
                     mainContent.style.display = 'block';
                     
-                    // Mulai hitungan mundur 10 detik pertama
-                    startCountdown10s();
+                    // Mulai hitungan mundur 10 detik setelah pemuatan awal
+                    startCountdown10s(); 
                     
-                    // Gulir ke atas untuk konten baru
                     window.scrollTo(0, 0); 
                 }
                 
                 count5s--;
+            };
+
+            // Fungsi untuk memperbarui hitungan 10s - MODIFIKASI INI
+            const updateCountdown10s = () => {
+                timerDisplay10s.textContent = count10s;
+                
+                if (count10s <= 0) {
+                    // Ketika hitungan mundur 10 detik selesai:
+                    
+                    // 1. Panggil fungsi untuk memperbarui data tabel
+                    updateTransactionData();
+                    
+                    // 2. Mulai kembali hitungan mundur 10 detik
+                    startCountdown10s();
+                    
+                    return; // Keluar dari fungsi updateCountdown10s
+                }
+                
+                count10s--;
             };
 
             // Jalankan fungsi updateCountdown 5s setiap 1 detik
