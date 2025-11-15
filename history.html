@@ -175,6 +175,15 @@
             font-weight: bold;
             color: #00ff73; /* Teks Hijau Neon */
         }
+        
+        /* Gaya tambahan untuk indikator loading */
+        .loading-text {
+            color: #007bff;
+            font-weight: bold;
+            text-align: center;
+            padding: 10px;
+        }
+
     </style>
 </head>
 <body>
@@ -207,8 +216,7 @@
                 Kesalahan: {{ error }}. Harap periksa jaringan Termux Anda.
             </p>
         {% elif transactions %}
-            <table>
-                <thead>
+            <table id="transaction-table"> <thead>
                     <tr>
                         <th>Waktu (WIB)</th> 
                         <th>Dari</th>
@@ -219,8 +227,7 @@
                         <th>Status</th>
                     </tr>
                 </thead>
-                <tbody>
-                    {% for tx in transactions %}
+                <tbody id="transaction-tbody"> {% for tx in transactions %}
                     <tr>
                         <td>{{ tx.timeStamp | format_timestamp }}</td> 
                         <td class="hash">
@@ -258,7 +265,7 @@
             </table>
 
         {% else %}
-            <p>Tidak ada transaksi normal yang ditemukan untuk alamat ini, atau ada masalah dengan respons API.</p>
+            <p id="transaction-tbody">Tidak ada transaksi normal yang ditemukan untuk alamat ini, atau ada masalah dengan respons API.</p>
         {% endif %}
     </div>
     
@@ -270,12 +277,89 @@
             const overlay = document.getElementById('countdown-overlay');
             const mainContent = document.getElementById('main-content');
 
-            // Hitungan Mundur Tambahan (10s) - BARU
-            let count10s = 11;
+            // Hitungan Mundur Tambahan (10s) - MODIF
+            let count10s = 10;
             const timerContainer10s = document.getElementById('timer-10s-container');
             const timerDisplay10s = document.getElementById('timer-10s-display');
-            let countdownInterval10s; // Variabel untuk interval 10s
+            let countdownInterval10s;
+            
+            // Elemen Tabel
+            const transactionTbody = document.getElementById('transaction-tbody');
+            const transactionTable = document.getElementById('transaction-table');
+            const initialTableContent = transactionTbody ? transactionTbody.innerHTML : '';
+            
+            // *** FUNGSI BARU UNTUK MEMPERBARUI TABEL ***
+            const fetchAndReplaceTable = async () => {
+                if (!transactionTable) {
+                    console.log("Tabel tidak ditemukan, tidak ada data untuk diperbarui.");
+                    return;
+                }
+                
+                // Tampilkan indikator loading sementara
+                const tableContainer = transactionTable.parentNode;
+                const loadingIndicator = document.createElement('div');
+                loadingIndicator.className = 'loading-text';
+                loadingIndicator.textContent = '🔄 Memuat data baru...';
+                
+                transactionTbody.innerHTML = `<tr><td colspan="7">${loadingIndicator.outerHTML}</td></tr>`;
 
+                try {
+                    // *** GANTI DENGAN ENDPOINT API YANG SESUAI ***
+                    // Endpoint ini harus mengembalikan HANYA konten <tbody> yang baru
+                    // atau seluruh HTML tabel yang baru.
+                    const response = await fetch('/refresh_transactions_fragment'); 
+                    
+                    if (!response.ok) {
+                        throw new Error('Gagal mengambil data: ' + response.statusText);
+                    }
+
+                    // Diasumsikan endpoint mengembalikan string HTML untuk <tbody> yang baru
+                    const newTbodyHtml = await response.text(); 
+                    
+                    // Ganti konten <tbody> saat ini
+                    transactionTbody.innerHTML = newTbodyHtml;
+
+                } catch (error) {
+                    console.error('Kesalahan saat memperbarui tabel:', error);
+                    // Kembalikan konten sebelumnya (opsional) atau tampilkan pesan error
+                    transactionTbody.innerHTML = `<tr><td colspan="7"><p class="error">Gagal memuat: ${error.message}</p></td></tr>`;
+                }
+
+                // Setelah pembaruan selesai, mulai ulang timer 10s
+                startCountdown10s(); 
+            };
+            
+            // Fungsi untuk memulai dan mengelola hitungan 10s
+            const startCountdown10s = () => {
+                count10s = 10; // Reset counter
+                timerContainer10s.style.opacity = 1; // Pastikan timer terlihat
+                
+                if (countdownInterval10s) {
+                    clearInterval(countdownInterval10s); // Hentikan interval lama jika ada
+                }
+                
+                // Mulai interval 10s baru
+                countdownInterval10s = setInterval(updateCountdown10s, 1000);
+                updateCountdown10s(); // Panggil sekali segera untuk menampilkan '10'
+            };
+
+            // Fungsi untuk memperbarui hitungan 10s - MODIF
+            const updateCountdown10s = () => {
+                timerDisplay10s.textContent = count10s;
+                
+                if (count10s <= 0) {
+                    clearInterval(countdownInterval10s);
+                    timerContainer10s.style.opacity = 0; // Sembunyikan timer saat selesai
+                    // *** PANGGIL FUNGSI REFRESH DATA ***
+                    fetchAndReplaceTable(); 
+                    // Perhatikan: startCountdown10s() dipanggil di dalam fetchAndReplaceTable() 
+                    // setelah data berhasil diperbarui atau gagal, untuk menghindari 
+                    // *refresh* berulang kali jika *fetch* lambat.
+                }
+                
+                count10s--;
+            };
+            
             // Fungsi untuk memperbarui hitungan 5s
             const updateCountdown5s = () => {
                 timerDisplay5s.textContent = count5s;
@@ -285,30 +369,15 @@
                     // Sembunyikan overlay dan tampilkan konten utama
                     overlay.style.display = 'none';
                     mainContent.style.display = 'block';
-                    timerContainer10s.style.opacity = 1; // Tampilkan timer 10s
                     
-                    // Mulai hitungan mundur 10 detik
-                    countdownInterval10s = setInterval(updateCountdown10s, 1000);
-                    updateCountdown10s(); // Panggil sekali segera untuk menampilkan '10'
+                    // Mulai hitungan mundur 10 detik pertama
+                    startCountdown10s();
                     
                     // Gulir ke atas untuk konten baru
                     window.scrollTo(0, 0); 
                 }
                 
                 count5s--;
-            };
-
-            // Fungsi untuk memperbarui hitungan 10s - BARU
-            const updateCountdown10s = () => {
-                timerDisplay10s.textContent = count10s;
-                
-                if (count10s <= 0) {
-                    clearInterval(countdownInterval10s);
-                    timerContainer10s.style.opacity = 0; // Sembunyikan timer 10s saat selesai
-                    // Anda bisa menambahkan aksi lain di sini setelah timer 10s selesai (misalnya refresh data)
-                }
-                
-                count10s--;
             };
 
             // Jalankan fungsi updateCountdown 5s setiap 1 detik
