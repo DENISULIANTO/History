@@ -58,18 +58,6 @@
             color: #8b949e;
             font-size:l 15 px;
         }
-        
-        /* Tambahan style untuk penekanan pada jumlah nominal */
-        .amount-display {
-            color: #00ff73; /* Hijau Neon */
-            font-weight: bold;
-            display: block; /* Memastikan setiap p baru */
-        }
-        .time-label {
-            color: #8b949e;
-            font-weight: normal;
-        }
-        /* Akhir tambahan style */
 
         .error { 
             color: #ff5858; /* Merah neon untuk error */
@@ -212,19 +200,24 @@
             {% if eth_price_usd %}
                 <p id="eth-price-display">Harga ETH Saat Ini: **${{ eth_price_usd | format_currency(2) }}**</p>
             {% endif %}
-            
-            {# --- TAMBAHAN KODE MODIFIKASI DIMULAI DI SINI --- #}
-            <p class="amount-display">
-                <span class="time-label">1 Menit Terbaru:</span> 
-                <span id="current-minute-eth">Jumlah ETH: {{ minute_totals.current.eth | format_currency(6) }}</span> | 
-                <span id="current-minute-usd">Jumlah USD: ${{ minute_totals.current.usd | format_currency(2) }}</span>
-            </p>
-            <p class="amount-display">
-                <span class="time-label">1 Menit Sebelumnya:</span> 
-                <span id="previous-minute-eth">Jumlah ETH: {{ minute_totals.previous.eth | format_currency(6) }}</span> | 
-                <span id="previous-minute-usd">Jumlah USD: ${{ minute_totals.previous.usd | format_currency(2) }}</span>
-            </p>
-            {# --- TAMBAHAN KODE MODIFIKASI BERAKHIR DI SINI --- #}
+
+            {# --- TAMBAHAN BARU: Nominal 1 Menit Terbaru --- #}
+            <hr style="border: 1px solid #30363d; margin: 10px 0;">
+            <h3>Total Nominal (1 Menit Terbaru)</h3>
+            {% if minute_sums and minute_sums.latest %}
+                <p id="latest-range-display" style="font-size: 14px;">Rentang (Lokal): **{{ minute_sums.latest.range_local }}**</p>
+                <p id="latest-eth-display"> Jumlah ETH : **{{ minute_sums.latest.eth | format_currency(6) }}**</p>
+                <p id="latest-usd-display"> Jumlah USD : **${{ minute_sums.latest.usd | format_currency(2) }}**</p>
+            {% endif %}
+
+            {# --- TAMBAHAN BARU: Nominal 1 Menit Sebelumnya --- #}
+            <hr style="border: 1px solid #30363d; margin: 10px 0;">
+            <h3>Total Nominal (1 Menit Sebelumnya)</h3>
+            {% if minute_sums and minute_sums.previous %}
+                <p id="previous-range-display" style="font-size: 14px;">Rentang (Lokal): **{{ minute_sums.previous.range_local }}**</p>
+                <p id="previous-eth-display"> Jumlah ETH : **{{ minute_sums.previous.eth | format_currency(6) }}**</p>
+                <p id="previous-usd-display"> Jumlah USD : **${{ minute_sums.previous.usd | format_currency(2) }}**</p>
+            {% endif %}
             
         </div>
 
@@ -296,26 +289,20 @@
              if (isNaN(num)) return "0";
              
              // Format standar JS: ribuan koma, desimal titik
-             const formatted = num.toFixed(precision).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+             let formatted = num.toFixed(precision).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
              
              // Ganti koma dengan titik untuk ribuan, dan titik dengan koma untuk desimal
              let parts = formatted.split('.');
              if (parts.length > 1) {
                  const decimal_part = parts.pop();
-                 // Pengecekan untuk nilai di bawah 1000
-                 if (parts[0].length > 3) {
-                     // Lakukan pemformatan ribuan jika perlu
-                     parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-                 }
-                 return parts.join('') + ',' + decimal_part;
+                 return parts.join('.') + ',' + decimal_part;
              }
-             // Handle kasus integer murni (tanpa titik desimal)
-             return formatted.replace(/\B(?=(\d{3})+(?!\d))/g, ".") + ',' + '0'.repeat(precision);
+             return formatted + ',' + '0'.repeat(precision);
         }
 
         // --- FUNGSI UTAMA UNTUK MEMPERBARUI DATA ---
         const updateTransactionData = async () => {
-            console.log("Memperbarui data transaksi...");
+            console.log("Memperbarui data transaksi dan nominal 1-menit...");
             
             try {
                 // Panggil endpoint baru di Flask
@@ -336,14 +323,20 @@
                         ethPriceDisplay.innerHTML = `Harga ETH Saat Ini: **$${format_currency_js(data.eth_price, 2)}**`; 
                     }
                     
-                    // 3. Perbarui Nominal Per Menit (TAMBAHAN INI)
-                    if (data.minute_totals) {
-                        document.getElementById('current-minute-eth').textContent = `Jumlah ETH: ${format_currency_js(data.minute_totals.current.eth, 6)}`;
-                        document.getElementById('current-minute-usd').textContent = `Jumlah USD: $${format_currency_js(data.minute_totals.current.usd, 2)}`;
-                        document.getElementById('previous-minute-eth').textContent = `Jumlah ETH: ${format_currency_js(data.minute_totals.previous.eth, 6)}`;
-                        document.getElementById('previous-minute-usd').textContent = `Jumlah USD: $${format_currency_js(data.minute_totals.previous.usd, 2)}`;
+                    // 3. Perbarui Total Nominal 1 Menit (Tambahan Baru)
+                    const sums = data.minute_sums;
+                    if (sums) {
+                        // Terbaru
+                        document.getElementById('latest-range-display').innerHTML = `Rentang (Lokal): **${sums.latest.range_local}**`;
+                        document.getElementById('latest-eth-display').innerHTML = ` Jumlah ETH : **${format_currency_js(sums.latest.eth, 6)}**`;
+                        document.getElementById('latest-usd-display').innerHTML = ` Jumlah USD : **$${format_currency_js(sums.latest.usd, 2)}**`;
+                        
+                        // Sebelumnya
+                        document.getElementById('previous-range-display').innerHTML = `Rentang (Lokal): **${sums.previous.range_local}**`;
+                        document.getElementById('previous-eth-display').innerHTML = ` Jumlah ETH : **${format_currency_js(sums.previous.eth, 6)}**`;
+                        document.getElementById('previous-usd-display').innerHTML = ` Jumlah USD : **$${format_currency_js(sums.previous.usd, 2)}**`;
                     }
-
+                    
                     // Sembunyikan pesan error dan tampilkan tabel jika berhasil
                     const table = document.getElementById('transactions-table');
                     const errorMessage = document.getElementById('data-error-message');
@@ -357,12 +350,8 @@
                     // Tampilkan pesan error jika pembaruan gagal
                     console.error("Gagal memperbarui data:", data.error);
                     const mainContent = document.getElementById('main-content');
-                    // Mengganti konten utama dengan pesan error hanya jika benar-benar gagal total
-                    // mainContent.innerHTML = `<p class="error">Kesalahan: ${data.error}. Harap periksa koneksi Termux/API Blockscout.</p>`;
-                    const errorMessage = document.getElementById('data-error-message');
-                    if(errorMessage) {
-                         errorMessage.textContent = `Kesalahan: ${data.error}. Harap periksa koneksi Termux/API Blockscout.`;
-                         errorMessage.style.display = 'block';
+                    if (mainContent) {
+                        mainContent.innerHTML = `<p class="error">Kesalahan: ${data.error}. Harap periksa koneksi Termux/API Blockscout.</p>`;
                     }
                 }
 
@@ -370,12 +359,7 @@
                 console.error('Kesalahan Jaringan saat mengambil pembaruan:', error);
                 const mainContent = document.getElementById('main-content');
                 if (mainContent) {
-                    // mainContent.innerHTML = `<p class="error">Kesalahan Jaringan: ${error.message}. Tidak dapat terhubung ke server Flask.</p>`;
-                    const errorMessage = document.getElementById('data-error-message');
-                    if(errorMessage) {
-                         errorMessage.textContent = `Kesalahan Jaringan: ${error.message}. Tidak dapat terhubung ke server Flask.`;
-                         errorMessage.style.display = 'block';
-                    }
+                    mainContent.innerHTML = `<p class="error">Kesalahan Jaringan: ${error.message}. Tidak dapat terhubung ke server Flask.</p>`;
                 }
             }
         };
@@ -389,6 +373,7 @@
             const mainContent = document.getElementById('main-content');
 
             // Hitungan Mundur Tambahan (60s / 1 menit)
+            // UBAH NILAI INI DARI 10 KE 60
             let count60s = 60; 
             const timerContainer60s = document.getElementById('timer-10s-container');
             const timerDisplay60s = document.getElementById('timer-10s-display');
