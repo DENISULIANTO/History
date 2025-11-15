@@ -168,7 +168,6 @@
             <h2>{{ address }}</h2>
             <p>Data diambil dari Blockscout API. Urutan: Terbaru ke Terlama.</p> 
             {% if eth_price_usd %}
-                {# Menggunakan filter format_currency(2) untuk harga ETH di header #}
                 <p>Harga ETH Saat Ini: **${{ eth_price_usd | format_currency(2) }}**</p>
             {% endif %}
         </div>
@@ -205,10 +204,10 @@
                             </a>
                         </td>
                         
-                        {# MODIFIKASI: Menggunakan filter format_currency(6) untuk ETH #}
+                        {# MODIFIKASI: Menggunakan filter format_currency(6) untuk ETH (ribuan titik, koma 6 desimal) #}
                         <td>{{ tx.value_eth | format_currency(6) }}</td> 
                         
-                        {# MODIFIKASI: Menggunakan filter format_currency(2) untuk USD #}
+                        {# MODIFIKASI: Menggunakan filter format_currency(2) untuk USD (ribuan titik, koma 2 desimal) #}
                         <td>{{ tx.value_usd | format_currency(2) }}</td> 
                         
                         <td class="hash">
@@ -265,4 +264,3 @@
     </script>
 </body>
 </html>
-
