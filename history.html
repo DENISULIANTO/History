@@ -271,7 +271,7 @@
             const mainContent = document.getElementById('main-content');
 
             // Hitungan Mundur Tambahan (10s) - BARU
-            let count10s = 10;
+            let count10s = 11;
             const timerContainer10s = document.getElementById('timer-10s-container');
             const timerDisplay10s = document.getElementById('timer-10s-display');
             let countdownInterval10s; // Variabel untuk interval 10s
@@ -288,7 +288,7 @@
                     timerContainer10s.style.opacity = 1; // Tampilkan timer 10s
                     
                     // Mulai hitungan mundur 10 detik
-                    countdownInterval10s = setInterval(updateCountdown10s, 2000);
+                    countdownInterval10s = setInterval(updateCountdown10s, 1000);
                     updateCountdown10s(); // Panggil sekali segera untuk menampilkan '10'
                     
                     // Gulir ke atas untuk konten baru
