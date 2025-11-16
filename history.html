@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Riwayat Token Transfers (ERC-20)</title>
+    <title>Riwayat Transaksi Wallet Ethereum</title>
     <style>
         /* TEMA GELAP UTAMA */
         body { 
@@ -190,13 +190,13 @@
 
     <div class="container" id="main-content" style="display: none;">
         <div class="title-box">
-            <h1>Riwayat Token Transfers (ERC-20)</h1>
+            <h1>Riwayat Transaksi Ethereum</h1>
         </div>
         
         <div class="address-box">
             Alamat Wallet: 
             <h2>{{ address }}</h2>
-            <p>Data diambil dari Blockscout API (Token Transfers ERC-20). Urutan: Terbaru ke Terlama.</p> 
+            <p>Data diambil dari Blockscout API. Urutan: Terbaru ke Terlama.</p> 
             {% if eth_price_usd %}
                 <p id="eth-price-display">Harga ETH Saat Ini: **${{ eth_price_usd | format_currency(2) }}**</p>
             {% endif %}
@@ -206,7 +206,7 @@
             <h3>Total Nominal (1 Menit Terbaru)</h3>
             {% if minute_sums and minute_sums.latest %}
                 <p id="latest-range-display" style="font-size: 14px;">Rentang (Lokal): **{{ minute_sums.latest.range_local }}**</p>
-                <p id="latest-eth-display"> Jumlah Token : **{{ minute_sums.latest.eth | format_currency(6) }}**</p>
+                <p id="latest-eth-display"> Jumlah ETH : **{{ minute_sums.latest.eth | format_currency(6) }}**</p>
                 <p id="latest-usd-display"> Jumlah USD : **${{ minute_sums.latest.usd | format_currency(2) }}**</p>
             {% endif %}
 
@@ -215,7 +215,7 @@
             <h3>Total Nominal (1 Menit Sebelumnya)</h3>
             {% if minute_sums and minute_sums.previous %}
                 <p id="previous-range-display" style="font-size: 14px;">Rentang (Lokal): **{{ minute_sums.previous.range_local }}**</p>
-                <p id="previous-eth-display"> Jumlah Token : **{{ minute_sums.previous.eth | format_currency(6) }}**</p>
+                <p id="previous-eth-display"> Jumlah ETH : **{{ minute_sums.previous.eth | format_currency(6) }}**</p>
                 <p id="previous-usd-display"> Jumlah USD : **${{ minute_sums.previous.usd | format_currency(2) }}**</p>
             {% endif %}
             
@@ -232,7 +232,7 @@
                         <th>Waktu (WIB)</th> 
                         <th>Dari</th>
                         <th>Ke</th>
-                        <th>Jumlah (Token)</th> 
+                        <th>Jumlah (ETH)</th>
                         <th>Jumlah (USD)</th>
                         <th>Hash Transaksi</th>
                         <th>Status</th>
@@ -253,8 +253,8 @@
                             </a>
                         </td>
                         
-                        {# MODIFIKASI: Menggunakan value_token dan menampilkan simbol token #}
-                        <td>{{ tx.value_token | format_currency(6) }} {{ tx.tokenSymbol }}</td> 
+                        {# Menggunakan filter format_currency(6) untuk ETH #}
+                        <td>{{ tx.value_eth | format_currency(6) }}</td> 
                         
                         {# Menggunakan filter format_currency(2) untuk USD #}
                         <td>{{ tx.value_usd | format_currency(2) }}</td> 
@@ -265,7 +265,6 @@
                             </a>
                         </td>
                         <td>
-                            {# isError akan selalu '0' (Sukses) karena data token transfer di API Blockscout umumnya hanya mencatat yang sukses #}
                             {% if tx.isError == '0' %}
                                 <span class="success">Sukses</span>
                             {% else %}
@@ -278,7 +277,7 @@
             </table>
 
         {% else %}
-            <p id="no-transactions-message">Tidak ada token transfer (ERC-20) yang ditemukan untuk alamat ini, atau ada masalah dengan respons API.</p>
+            <p id="no-transactions-message">Tidak ada transaksi normal yang ditemukan untuk alamat ini, atau ada masalah dengan respons API.</p>
         {% endif %}
     </div>
     
@@ -358,8 +357,7 @@
             }
             
             // Jumlah ETH dan USD diperbarui secara otomatis
-            // MODIFIKASI: Mengganti label ETH menjadi Token
-            document.getElementById('latest-eth-display').innerHTML = ` Jumlah Token : **${format_currency_js(sums.latest.eth, 6)}**`;
+            document.getElementById('latest-eth-display').innerHTML = ` Jumlah ETH : **${format_currency_js(sums.latest.eth, 6)}**`;
             document.getElementById('latest-usd-display').innerHTML = ` Jumlah USD : **$${format_currency_js(sums.latest.usd, 2)}**`;
             
             // Sebelumnya
@@ -369,15 +367,14 @@
                 previousRangeElement.innerHTML = newRangeText; // Rentang waktu diperbarui
             }
             // Jumlah ETH dan USD diperbarui secara otomatis
-            // MODIFIKASI: Mengganti label ETH menjadi Token
-            document.getElementById('previous-eth-display').innerHTML = ` Jumlah Token : **${format_currency_js(sums.previous.eth, 6)}**`;
+            document.getElementById('previous-eth-display').innerHTML = ` Jumlah ETH : **${format_currency_js(sums.previous.eth, 6)}**`;
             document.getElementById('previous-usd-display').innerHTML = ` Jumlah USD : **$${format_currency_js(sums.previous.usd, 2)}**`;
         }
 
 
         // --- FUNGSI UTAMA UNTUK MEMPERBARUI DATA ---
         const updateTransactionData = async () => {
-            console.log("Memperbarui data token transfer dan nominal 1-menit...");
+            console.log("Memperbarui data transaksi dan nominal 1-menit...");
             
             try {
                 // Panggil endpoint baru di Flask
@@ -449,7 +446,6 @@
                  
                  // Koreksi WIB untuk Terbaru
                  if (latestRangeElement) {
-                    // Pastikan yang diambil adalah teks asli, bukan innerHTML yang sudah dimodifikasi
                     const originalText = latestRangeElement.innerText.trim().replace('Rentang (Lokal): **', '').replace('**', '');
                     const newRangeText = adjust_to_wib(originalText);
                     latestRangeElement.innerHTML = newRangeText;
@@ -461,10 +457,6 @@
                     const newRangeText = adjust_to_wib(originalText);
                     previousRangeElement.innerHTML = newRangeText;
                  }
-                 
-                 // MODIFIKASI: Koreksi label nominal (ETH -> Token)
-                 document.getElementById('latest-eth-display').innerHTML = document.getElementById('latest-eth-display').innerHTML.replace("Jumlah ETH", "Jumlah Token");
-                 document.getElementById('previous-eth-display').innerHTML = document.getElementById('previous-eth-display').innerHTML.replace("Jumlah ETH", "Jumlah Token");
             };
             // -----------------------------------------------------
 
